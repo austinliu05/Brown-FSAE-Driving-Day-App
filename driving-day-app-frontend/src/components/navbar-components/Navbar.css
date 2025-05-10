@@ -7,7 +7,7 @@
     /* padding-bottom: 0.65rem; */
     width: 16rem;
     position: fixed;
-    height: 100vh;
+    height: 100%;
     z-index: 10;
   }
 

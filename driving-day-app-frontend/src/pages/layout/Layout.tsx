@@ -9,7 +9,7 @@ import ChartContext from "../../components/contexts/ChartContext";
 import LineChartTemplate from '../../components/graph-components/LineChartTemplate';
 import ScatterChartTemplate from '../../components/graph-components/ScatterChartTemplate';
 import { CATEGORIES, StandardChartProps } from "../../utils/DataTypes";
-import axios from "axios";
+import { auth } from '../../api/firebaseConfig'; 
 
 const chartMapping: { [key: number]: React.FC<StandardChartProps> } = {
     0: LineChartTemplate,
@@ -27,30 +27,8 @@ const globalPageSize: number = 20
 
 
 export default function Layout() {
-    useEffect(() => {
-        const fetchCSRFToken = async () => {
-            try {
-                const response = await fetch(
-                    `${process.env.REACT_APP_BACKEND_URL}/api/get-csrf-token`,
-                    { credentials: "include" }
-                );
-                const data = await response.json();
-                const csrfToken = data.csrfToken;
 
-                if (csrfToken) {
-                    api.defaults.headers.common["X-CSRFToken"] = csrfToken; // ✅ use your instance
-                    console.log("✅ Set CSRF token on api instance:", csrfToken);
-                } else {
-                    console.error("❌ CSRF token missing in response");
-                }
-            } catch (error) {
-                console.error("❌ Failed to fetch CSRF token:", error);
-            }
-        };
-
-        fetchCSRFToken();
-    }, []);
-
+    const [currUserId, setCurrUserId] = useState<string | null>(null)
     const [drivers, setDrivers] = useState<Driver[]>([])
     const [isLoading, setLoading] = useState<boolean>(true)
 
@@ -61,9 +39,46 @@ export default function Layout() {
             setLoading(false)
         }
     }
+
+    const fetchCSRFToken = async () => {
+        try {
+            // TODO: Change this to be a GET request in api.ts
+            const response = await fetch(
+                `${process.env.REACT_APP_BACKEND_URL}/api/get-csrf-token`,
+                { credentials: "include" }
+            );
+            const data = await response.json();
+            const csrfToken = data.csrfToken;
+
+            if (csrfToken) {
+                api.defaults.headers.common["X-CSRFToken"] = csrfToken; // ✅ use your instance
+                //console.log("✅ Set CSRF token on api instance:", csrfToken);
+            } else {
+                console.error("❌ CSRF token missing in response");
+            }
+        } catch (error) {
+            console.error("❌ Failed to fetch CSRF token:", error);
+        }
+    };
+
+
     useEffect(() => {
+        
+        fetchCSRFToken();
         fetchDrivers();
-    }, [])
+
+        const checkAuth = auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log("CURRENT USER: ", user.email)
+                setCurrUserId(user.email)
+            } else {
+                setCurrUserId(null);
+            }
+        });
+
+        checkAuth(); 
+    }, []);
+
 
     return (
         <div className="wrapper">
@@ -73,6 +88,8 @@ export default function Layout() {
                 globalPageSize: globalPageSize
             }}>
                 <AppDataContext.Provider value={{
+                    currUserId: currUserId,
+                    setCurrUserId: setCurrUserId,
                     drivers: drivers,
                     isLoading: isLoading
                 }}>

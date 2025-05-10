@@ -262,6 +262,8 @@ async def get_all_issues_call(request):
     return JsonResponse({"error": "Invalid request method. Use GET."}, status=400)
 
 
+
+
 async def update_issue_call(request, issue_id):
     if request.method == 'PUT':
         try:
@@ -280,6 +282,7 @@ async def update_issue_call(request, issue_id):
             return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
         
     return JsonResponse({"error": "Invalid request method. Use PUT."}, status=400)
+
 
 async def delete_issue_call(request, issue_id):
     """

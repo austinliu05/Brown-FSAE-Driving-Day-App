@@ -10,6 +10,7 @@ import UploadFilesPage from "./pages/upload-page/UploadFilesPage";
 import HomePage from "./pages/home-page/HomePage";
 import DevPage from "./pages/dev-page/DevPage";
 import IssuesPage from "./pages/issues-page/IssuesPage";
+import MyAccountPage from "./pages/account-page/MyAccountPage";
 
 /**
  * Creates an object that handles routing for all webpages:
@@ -38,7 +39,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/my-account",
-        element: <App />,
+        element: <MyAccountPage />,
       },
       {
         path: "/upload-files",

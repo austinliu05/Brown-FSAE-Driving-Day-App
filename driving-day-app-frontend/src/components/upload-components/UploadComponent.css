@@ -1,4 +1,8 @@
-.upload-metadata input,
+@tailwind components;
+@tailwind base;
+@tailwind utilities;
+
+/* .upload-metadata input,
 .upload-metadata select {
     border-radius: 0.25rem;
     margin: 1.5rem 0;
@@ -22,4 +26,36 @@
 
 .upload-button:hover {
     opacity: 0.75;
+} */
+
+@layer base{
+    h1 {
+        @apply mb-6 text-2xl font-semibold;
+    }
+
+    .upload-metadata input,
+    .upload-metadata select {
+        border-radius: 0.25rem;
+        margin: 1.5rem 0;
+        padding: 0.2rem 0.5rem;
+        border: lightgrey 1px solid;
+        color: black;
+    }
+
+    .upload-metadata input::placeholder {
+        color: black;
+    }
+
+
+    .disabled-upload-button,
+    .upload-button {
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        width: 9rem;
+    }
+
+    .upload-button:hover {
+        opacity: 0.75;
+    }
 }

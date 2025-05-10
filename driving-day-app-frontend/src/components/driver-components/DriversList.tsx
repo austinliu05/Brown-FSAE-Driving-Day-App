@@ -57,7 +57,12 @@ const DriversList = () => {
 
           <div className="selected-driver">
             {selectedDriver ? (
-              <SpecificDriverProfile driver={selectedDriver} />
+              // <SpecificDriverProfile driver={selectedDriver} />
+              <div>
+                  <div className="justify-center bg-white border rounded-lg shadow-lg flex flex-col items-center w-full">
+                    <SpecificDriverProfile driver={selectedDriver} />
+                  </div>
+              </div>
             ) : (
               <div className="text-center p-8 bg-gray-50 rounded-lg">
                 Select a driver to view details

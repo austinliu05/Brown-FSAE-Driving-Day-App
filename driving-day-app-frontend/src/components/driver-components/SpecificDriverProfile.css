@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer components{
+    .profile-data p{
+        @apply m-2 text-center;
+    }
+}
