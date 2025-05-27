@@ -4,21 +4,16 @@ import AddIssueModal from "./AddIssueModal";
 import DropdownFilter from "../filter-components/DropdownFilter";
 import DriverFilter from "../filter-components/DriverFilter";
 import FiltersBase from "../base-components/FiltersBase";
-import { getAllIssues } from "../../api/api";
+import { getAllIssues, getIssuesPaginated } from "../../api/api";
 import { availableSubsystems, priorityLevels, statusOptions } from "../../constants/IssuesConstants";
 import AppDataContext from '../contexts/AppDataContext';
-import { Driver } from "../../utils/DriverType";
+import Pagination from "../pagination-components/Pagination";
+import { Issue } from "../../utils/DataTypes";
+import { Stack } from "../../utils/CustomDataStructs";
 
-interface Issue {
-  id: string;
-  driver: string;
-  date: string;
-  synopsis: string;
-  subsystems: string[];
-  description: string;
-  priority?: string;
-  status?: string;
-}
+const globalPageSize = 20
+// Use a STACK to keep track of all (startAfterDoc) entries
+const pageStartStack = new Stack<string>()
 
 export default function IssueTable() {
 
@@ -43,48 +38,66 @@ export default function IssueTable() {
    * useState hook that stores current page number (for pagination)
    */
   const [pageNumber, setPageNumber] = useState<number>(1)
+  const [isUpdating, setUpdating] = useState<boolean>(false)
 
   const updatePageNumber = (newPageNumber: number) => {
-    // Updates page number AND pulls relevant set of issues
+    let currFirstDoc : string = ""
+    let currLastDoc : string = ""
+    if(issues.length > 0){
+      currFirstDoc = issues[0]['id']
+      currLastDoc = issues[issues.length-1]['id']
+    }
+
+    // Need to fetch previous set of entries
+    if(newPageNumber < pageNumber){
+      const prevFirstDoc = pageStartStack.pop() || ""
+      fetchIssuesPaginated(prevFirstDoc, "")
+    }
+    else if(newPageNumber > pageNumber){
+      pageStartStack.push(currFirstDoc)
+      fetchIssuesPaginated("", currLastDoc)
+    }
+    else{
+      fetchIssuesPaginated(currFirstDoc, "")
+    }
+    setPageNumber(newPageNumber)
   }
 
-  useEffect(() => {
-    fetchIssues();
-  }, []);
-
-  useEffect(() => {
-    console.log("CURRENT PRIORITY: ", priorityFilt)
-  }, [driverIdFilt, subsystemFilt, priorityFilt, statusFilt])
-
-  const fetchIssues = async () => {
+  const fetchIssuesPaginated = async (startAtDoc: string, startAfterDoc: string) => {
+    setUpdating(true)
     setIsLoading(true);
     setError(null);
-    try {
-      const response = await getAllIssues();
-      if (response.status !== 200) {
-        throw new Error("Failed to fetch issues");
-      }
-      const updatedIssues = response.data.issues || [];
-      setIssues(updatedIssues);
-      if (selectedIssue) {
-        const updatedSelected = updatedIssues.find(
-          (issue: Issue) => issue.id === selectedIssue.id
-        );
-        setSelectedIssue(updatedSelected || null);
-      }
-    } catch (err) {
-      setError("Failed to load issues. Please try again.");
-    } finally {
-      setIsLoading(false);
+    // Make request to paginated version of fetchIssues call
+    const response = await getIssuesPaginated({
+      pageSize: globalPageSize,
+      startAtDoc: startAtDoc,
+      startAfterDoc: startAfterDoc
+    })
+
+    if(response.status === 200){
+      setIssues(response.data.issuesPaginated)
     }
-  };
+    else{
+      setError("Failed to load issues. Please try again.");
+    }
+
+    setUpdating(false)
+    setIsLoading(false);
+  }
 
   const handleSave = (newIssue?: Issue) => {
-    if (newIssue) {
-      setIssues(prev => [newIssue, ...prev]);
-    } else {
-      fetchIssues();
-    }
+    // if (newIssue) {
+    //   setIssues(prev => [newIssue, ...prev]);
+    //   // Need to att to stack of pageStartStack
+    //   pageStartStack.push(newIssue.id)
+    // } else {
+    //   // fetchIssues();
+    //   // Re-pull all the pages for the current entry
+    //   updatePageNumber(pageNumber)
+    // }
+
+    // Re-pull all the pages for the current entry
+    updatePageNumber(pageNumber)
   };
 
   const getPriorityColor = (priority: string | undefined) => {
@@ -117,10 +130,19 @@ export default function IssueTable() {
     }
   };
 
+  useEffect(() => {
+    fetchIssuesPaginated("", "")
+  }, []);
+
+  // useEffect(() => {
+  //   console.log("CURRENT PRIORITY: ", priorityFilt)
+  // }, [driverIdFilt, subsystemFilt, priorityFilt, statusFilt])
+
+
   return (
     <>
-      {/* {error && <p className="text-red-500 mb-4">{error}</p>}
-      {isLoading && <p>Loading issues...</p>} */}
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {isLoading && <p>Loading issues...</p>}
 
       <FiltersBase>
         <DriverFilter 
@@ -200,7 +222,7 @@ export default function IssueTable() {
               >
                 {/* Issue # */}
                 <td className="px-6 py-4 sm:py-3 text-lg font-medium">
-                  {issues.length - index}
+                  {issue.issue_number}
                 </td>
 
                 {/* Driver (hidden on xs) */}
@@ -272,6 +294,16 @@ export default function IssueTable() {
         </table>
       </div>
 
+      {!isUpdating && 
+        <Pagination
+          pageSize={globalPageSize}
+          pageNumber={pageNumber}
+          pageQuantity={issues.length}
+          updatePageNumber={updatePageNumber}
+          />
+      }
+      
+
       {selectedIssue && (
         <IssueModal
           issue={selectedIssue}
@@ -285,7 +317,6 @@ export default function IssueTable() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSave={handleSave}
-        nextIssueNumber={issues.length + 1}
       />
     </>
   );

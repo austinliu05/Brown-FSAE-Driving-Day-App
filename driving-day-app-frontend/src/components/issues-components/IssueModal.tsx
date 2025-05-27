@@ -2,17 +2,7 @@ import React, { useState, useEffect } from "react";
 import Modal from "./Modal";
 import { updateIssue, deleteIssue } from "../../api/api";
 import { availableSubsystems, priorityLevels, statusOptions } from "../../constants/IssuesConstants";
-
-interface Issue {
-  id: string;
-  driver: string;
-  date: string;
-  synopsis: string;
-  subsystems: string[];
-  description: string;
-  priority?: string;
-  status?: string;
-}
+import { Issue } from "../../utils/DataTypes";
 
 interface IssueModalProps {
   issue: Issue;

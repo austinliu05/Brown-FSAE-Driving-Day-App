@@ -356,6 +356,24 @@ async def get_all_issues_call(request):
         }, status=500)
     
 
+@require_GET
+async def get_issues_paginated_call(request):
+    """
+    Retrieves a specific page of issues
+    """
+    try:
+        page_size = request.GET.get('pageSize')
+        start_at_doc = request.GET.get('startAtDoc')
+        start_after_doc = request.GET.get('startAfterDoc')
+
+        data = await sync_to_async(get_issues_paginated)(page_size, start_at_doc, start_after_doc)
+
+        return JsonResponse({"issuesPaginated": data}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
+
+
+
 @csrf_exempt
 async def update_issue_call(request, issue_id):
     if request.method == 'PUT':

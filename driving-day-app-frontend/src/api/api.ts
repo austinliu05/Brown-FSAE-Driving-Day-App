@@ -237,6 +237,24 @@ export const getAllIssues = async (filters?: {
   return await getRequest(path, searchParams);
 };
 
+
+export const getIssuesPaginated = async (filters: {
+  pageSize: number,
+  startAtDoc: string,
+  startAfterDoc: string
+}) => {
+  const path = "issues-paginated"
+  
+  const params = new URLSearchParams({
+    pageSize: filters.pageSize.toString(),
+    startAtDoc: filters.startAtDoc,
+    startAfterDoc: filters.startAfterDoc
+  });
+
+  return await getRequest(path, params);
+};
+
+
 export const updateIssue = async (
   issueId: string,
   issueData: {
