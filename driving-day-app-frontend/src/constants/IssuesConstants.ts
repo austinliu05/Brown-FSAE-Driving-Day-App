@@ -9,7 +9,7 @@ export const availableSubsystems = [
     "ENGN",
     "ERGO",
     "EXH",
-    "FEUL",
+    "FUEL",
     "INT",
     "PDL",
     "STR",

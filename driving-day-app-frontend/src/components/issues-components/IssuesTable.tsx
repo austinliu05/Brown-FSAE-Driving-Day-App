@@ -30,9 +30,9 @@ export default function IssueTable() {
    * useState hooks that store filter options
    */
   const [driverIdFilt, setDriverIdFilt] = useState<string | null>(null);
-  const [subsystemFilt, setSubsystemFilt] = useState<string | null>(null);
-  const [priorityFilt, setPriorityFilt] = useState<string | null>(null);
-  const [statusFilt, setStatusFilt] = useState<string | null>(null);
+  const [subsystemFilt, setSubsystemFilt] = useState<string>("");
+  const [priorityFilt, setPriorityFilt] = useState<string>("");
+  const [statusFilt, setStatusFilt] = useState<string>("");
 
   /**
    * useState hook that stores current page number (for pagination)
@@ -67,11 +67,19 @@ export default function IssueTable() {
     setUpdating(true)
     setIsLoading(true);
     setError(null);
+
+    const issueFilters = new Map<string, string>([
+      ["subsystem", subsystemFilt],
+      ["priority", priorityFilt],
+      ["status", statusFilt]
+    ])
+    
     // Make request to paginated version of fetchIssues call
     const response = await getIssuesPaginated({
       pageSize: globalPageSize,
       startAtDoc: startAtDoc,
-      startAfterDoc: startAfterDoc
+      startAfterDoc: startAfterDoc,
+      issueFilters: issueFilters
     })
 
     if(response.status === 200){
@@ -86,18 +94,10 @@ export default function IssueTable() {
   }
 
   const handleSave = (newIssue?: Issue) => {
-    // if (newIssue) {
-    //   setIssues(prev => [newIssue, ...prev]);
-    //   // Need to att to stack of pageStartStack
-    //   pageStartStack.push(newIssue.id)
-    // } else {
-    //   // fetchIssues();
-    //   // Re-pull all the pages for the current entry
-    //   updatePageNumber(pageNumber)
-    // }
-
-    // Re-pull all the pages for the current entry
-    updatePageNumber(pageNumber)
+    // Need to re-clear the Stack:
+    pageStartStack.clear()
+    setPageNumber(1)
+    fetchIssuesPaginated("", "")
   };
 
   const getPriorityColor = (priority: string | undefined) => {
@@ -132,7 +132,7 @@ export default function IssueTable() {
 
   useEffect(() => {
     fetchIssuesPaginated("", "")
-  }, []);
+  }, [priorityFilt, statusFilt]);
 
   // useEffect(() => {
   //   console.log("CURRENT PRIORITY: ", priorityFilt)

@@ -366,7 +366,20 @@ async def get_issues_paginated_call(request):
         start_at_doc = request.GET.get('startAtDoc')
         start_after_doc = request.GET.get('startAfterDoc')
 
-        data = await sync_to_async(get_issues_paginated)(page_size, start_at_doc, start_after_doc)
+        # Pulling optional filterss
+        subsystem = request.GET.get('subsystem')
+        priority = request.GET.get('priority')
+        status = request.GET.get('status')
+
+        print(subsystem, priority, status)
+
+        filters = {}
+        if len(priority) > 0:
+            filters['priority'] = priority
+        if len(status) > 0:
+            filters['status'] = status
+
+        data = await sync_to_async(get_issues_paginated)(page_size, start_at_doc, start_after_doc, filters)
 
         return JsonResponse({"issuesPaginated": data}, status=200)
     except Exception as e:

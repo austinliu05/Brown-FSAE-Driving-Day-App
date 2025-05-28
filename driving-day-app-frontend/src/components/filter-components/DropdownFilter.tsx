@@ -3,7 +3,7 @@ import React from "react";
 interface DropdownFilterProps{
     filterCategory: string,
     allFilterOptions: string[],
-    setFilterOption: React.Dispatch<React.SetStateAction<string | null>>
+    setFilterOption: React.Dispatch<React.SetStateAction<string>>
 }
 
 /**

@@ -284,6 +284,23 @@ def get_general_run_data(filter_limit=10, filtered_date=None, filtered_driver=No
         return None
 
 
+def get_latest_issue_number():
+    try:
+        main_db = db.collection('issues')
+        query = main_db.order_by('issue_number', direction=firestore.Query.DESCENDING)
+
+        # Pulls the first entry
+        docs = query.limit(1).stream()
+        
+        for doc in docs:
+            doc_data = doc.to_dict()
+            return doc_data['issue_number']
+    except Exception as e:
+        print(f"An unexpected error occurred when pulling specific document data (latest issue number): {e}")
+        return None
+
+
+
 def add_issue(data):
     try:
         if not isinstance(data, dict):
@@ -294,8 +311,13 @@ def add_issue(data):
             if field not in data or not data[field]:
                 raise ValueError(f"Missing or empty required field: {field}")
 
+        # Pull latest issue number:
+        new_issue_num = int(get_latest_issue_number()) + 1
+        data['issue_number'] = new_issue_num
+
         issue_data = {
             'driver': data['driver'],
+            'issue_number': data['issue_number'],
             'date': data['date'],
             'synopsis': data['synopsis'],
             'subsystems': data['subsystems'],
@@ -364,7 +386,7 @@ def get_all_issues(filters=None):
         return None
     
 
-def get_issues_paginated(page_size, start_at_doc="", start_after_doc=""):
+def get_issues_paginated(page_size, start_at_doc="", start_after_doc="", filters=None):
     try:
         main_db = db.collection('issues')
         query = main_db.order_by('issue_number', direction=firestore.Query.DESCENDING)
@@ -377,7 +399,14 @@ def get_issues_paginated(page_size, start_at_doc="", start_after_doc=""):
             last_doc_snapshot = main_db.document(start_after_doc)\
                 .get()
             query = query.start_after(last_doc_snapshot)
-            
+        
+        if filters:
+            # TODO: Add subsystem filter
+            if 'priority' in filters and filters['priority']:
+                query = query.where('priority', '==', filters['priority'])
+            if 'status' in filters and filters['status']:
+                query = query.where('status', '==', filters['status'])      
+
         docs = query\
             .limit(int(page_size)).stream()
 
@@ -389,7 +418,7 @@ def get_issues_paginated(page_size, start_at_doc="", start_after_doc=""):
                 
         return issues
     except Exception as e:
-        print(f"An unexpected error occurred when pulling specific document data (paginated): {e}")
+        print(f"An unexpected error occurred when pulling issues (paginated): {e}")
         return None
 
 

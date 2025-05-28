@@ -405,7 +405,7 @@ export default function IssueModal({
         ) : (
           <div>
             <div className="flex justify-between mb-4">
-              <h2 className="text-xl font-bold">Issue #{issue.id}</h2>
+              <h2 className="text-xl font-bold">Issue #{issue.issue_number}</h2>
             </div>
             {imageUrl ? (
               <div className="mb-4">
