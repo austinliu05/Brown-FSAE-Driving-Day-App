@@ -371,9 +371,10 @@ async def get_issues_paginated_call(request):
         priority = request.GET.get('priority')
         status = request.GET.get('status')
 
-        print(subsystem, priority, status)
-
         filters = {}
+        if len(subsystem) > 0:
+            # TODO: Fix to take in multiple subsystem filters
+            filters['subsystem'] = subsystem
         if len(priority) > 0:
             filters['priority'] = priority
         if len(status) > 0:

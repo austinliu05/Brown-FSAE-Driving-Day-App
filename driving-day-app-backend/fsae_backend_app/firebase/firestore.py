@@ -402,9 +402,11 @@ def get_issues_paginated(page_size, start_at_doc="", start_after_doc="", filters
         
         if filters:
             # TODO: Add subsystem filter
-            if 'priority' in filters and filters['priority']:
+            if 'subsystem' in filters:
+                query = query.where('subsystems', 'array_contains_any', [filters['subsystem']])
+            if 'priority' in filters:
                 query = query.where('priority', '==', filters['priority'])
-            if 'status' in filters and filters['status']:
+            if 'status' in filters:
                 query = query.where('status', '==', filters['status'])      
 
         docs = query\
