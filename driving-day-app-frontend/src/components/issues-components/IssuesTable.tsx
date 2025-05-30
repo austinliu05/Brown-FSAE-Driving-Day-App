@@ -136,11 +136,6 @@ export default function IssueTable() {
     fetchIssuesPaginated("", "")
   }, [subsystemFilt, priorityFilt, statusFilt]);
 
-  // useEffect(() => {
-  //   console.log("CURRENT PRIORITY: ", priorityFilt)
-  // }, [driverIdFilt, subsystemFilt, priorityFilt, statusFilt])
-
-
   return (
     <>
       {error && <p className="text-red-500 mb-4">{error}</p>}
