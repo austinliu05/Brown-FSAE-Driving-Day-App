@@ -135,6 +135,21 @@ export const getDriversFiltered = async (filters: {
   return await getRequest(path, searchParams);
 };
 
+
+export const getSpecificDriver = async (filters: {
+  driverId: string;
+}) => {
+  const path = "specific-driver";
+
+  const driverIdFilter = filters.driverId;
+  const searchParams = new URLSearchParams({
+    driverId: driverIdFilter
+  });
+
+  return await getRequest(path, searchParams)
+}
+
+
 /**
  *
  * @param runFilter: JSON object containing filters for:
@@ -221,6 +236,30 @@ export const getAllIssues = async (filters?: {
 
   return await getRequest(path, searchParams);
 };
+
+
+export const getIssuesPaginated = async (filters: {
+  pageSize: number,
+  startAtDoc: string,
+  startAfterDoc: string,
+  issueFilters: Map<string, string>  
+}) => {
+  const path = "issues-paginated"
+
+  const params = new URLSearchParams({
+    pageSize: filters.pageSize.toString(),
+    startAtDoc: filters.startAtDoc,
+    startAfterDoc: filters.startAfterDoc
+  });
+  
+  // TODO: Update URLSearchParams with each of the filters
+  filters.issueFilters.forEach((value, key) => {
+    params.append(key, value)
+  })
+
+  return await getRequest(path, params);
+};
+
 
 export const updateIssue = async (
   issueId: string,

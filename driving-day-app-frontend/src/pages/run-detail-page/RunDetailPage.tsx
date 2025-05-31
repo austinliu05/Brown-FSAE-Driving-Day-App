@@ -103,26 +103,24 @@ const RunDetailPage: React.FC = () => {
         })
 
         if(response.status === 200){
-            if(response.data.runDataPoints.length > 0){
-                const pulledRunData : any[] = response.data.runDataPoints
-                const pulledColumns : string[] = Object.keys(pulledRunData[0]) 
+            //if(response.data.runDataPoints.length > 0){
+            const pulledRunData = response.data.runDataPoints
+            const pulledColumns = Object.keys(pulledRunData[0]) 
 
-                updateChartColumns(pulledColumns)
-                setRunDataPoints(pulledRunData)
-                setKeyPoints(response.data.keyPoints)
+            updateChartColumns(pulledColumns)
+            setRunDataPoints(pulledRunData)
+            setKeyPoints(response.data.keyPoints)
 
-                if(verticalLabel.length === 0)
-                    setVerticalLabel(pulledColumns[0])
-            }
+            if(verticalLabel.length === 0)
+                setVerticalLabel(pulledColumns[0])
+            //}
             
-            setLoading(false)
-            setUpdating(false)
         }
+
+        setUpdating(false)
     }
 
     // TODO: Create fetch API call to obtain run meta-data by runTitle (called when necessary)
-    // TODO: Create button to change page number
-    
 
     useEffect(() => {
         // USE localStorage to cache in the future
@@ -223,13 +221,6 @@ const RunDetailPage: React.FC = () => {
                             updatePageNumber={updatePageNumber}
                             />
                     }
-                    {/* <Pagination
-                        pageSize={globalPageSize}
-                        pageNumber={pageNumber}
-                        pageQuantity={runDataPoints.length}
-                        updatePageNumber={updatePageNumber}
-                        />
-                     */}
                 </div>
             </div>
         </PageBase>

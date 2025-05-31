@@ -1,34 +1,23 @@
 import React, { useEffect, useState } from "react";
 import Modal from "./Modal";
 import { postFiles, postIssue, postS3Image } from "../../api/api";
-import { set } from "react-datepicker/dist/date_utils";
+import { availableSubsystems, priorityLevels, statusOptions } from "../../constants/IssuesConstants";
+import { Issue } from "../../utils/DataTypes";
 
 interface AddIssueModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (newIssue: Issue) => void;
-  nextIssueNumber: number;
-}
-
-interface Issue {
-  id: string;
-  driver: string;
-  date: string;
-  synopsis: string;
-  subsystems: string[];
-  description: string;
-  priority: string;
-  status: string;
 }
 
 export default function AddIssueModal({
   isOpen,
   onClose,
   onSave,
-  nextIssueNumber,
 }: AddIssueModalProps) {
   const today = new Date().toISOString().split("T")[0];
   const [issue, setIssue] = useState<Omit<Issue, "id">>({
+    issue_number: -1,
     driver: "",
     date: today,
     synopsis: "",
@@ -40,28 +29,6 @@ export default function AddIssueModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const availableSubsystems = [
-    "BRK",
-    "CHAS",
-    "COOL",
-    "DASH",
-    "DRV",
-    "DRIVER GEAR",
-    "ELE",
-    "ENGN",
-    "ERGO",
-    "EXH",
-    "FEUL",
-    "INT",
-    "PDL",
-    "STR",
-    "SUS",
-    "SHFT",
-  ];
-
-  const priorityLevels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
-  const statusOptions = ["OPEN", "IN PROGRESS", "CLOSED"];
-
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -69,6 +36,7 @@ export default function AddIssueModal({
   useEffect(() => {
     return () => {
       setIssue({
+        issue_number: -1,
         driver: "",
         date: today,
         synopsis: "",
@@ -120,6 +88,7 @@ export default function AddIssueModal({
       }
       onSave({ ...issue, id: issueId });
       setIssue({
+        issue_number: -1,
         driver: "",
         date: "",
         synopsis: "",
@@ -139,7 +108,7 @@ export default function AddIssueModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="p-6">
-        <h2 className="text-xl font-bold mb-4">Issue #{nextIssueNumber}</h2>
+        <h2 className="text-xl font-bold mb-4">New Issue</h2>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">

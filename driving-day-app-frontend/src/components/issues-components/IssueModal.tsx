@@ -1,17 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Modal from "./Modal";
 import { updateIssue, deleteIssue } from "../../api/api";
-
-interface Issue {
-  id: string;
-  driver: string;
-  date: string;
-  synopsis: string;
-  subsystems: string[];
-  description: string;
-  priority?: string;
-  status?: string;
-}
+import { availableSubsystems, priorityLevels, statusOptions } from "../../constants/IssuesConstants";
+import { Issue } from "../../utils/DataTypes";
 
 interface IssueModalProps {
   issue: Issue;
@@ -26,6 +17,7 @@ export default function IssueModal({
   onClose,
   onSave,
 }: IssueModalProps) {
+  
   const [editMode, setEditMode] = useState(false);
   const [editedIssue, setEditedIssue] = useState<Issue>(issue);
   const [isSubsystemDropdownOpen, setIsSubsystemDropdownOpen] = useState(false);
@@ -35,13 +27,14 @@ export default function IssueModal({
 
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imgError, setImgError] = useState<string | null>(null);
+
   useEffect(() => {
     if (isOpen && !editMode) {
       setImageUrl(null);
       setImgError(null);
 
       fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/fetch-s3-image/?issue_id=${issue.id}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/fetch-s3-image/?issue_id=${editedIssue.id}`,
         { credentials: "include" }
       )
         .then((res) => {
@@ -56,29 +49,7 @@ export default function IssueModal({
           setImgError("No image available");
         });
     }
-  }, [isOpen, editMode, issue.id]);
-
-  const availableSubsystems = [
-    "BRK",
-    "CHAS",
-    "COOL",
-    "DASH",
-    "DRV",
-    "DRIVER GEAR",
-    "ELE",
-    "ENGN",
-    "ERGO",
-    "EXH",
-    "FEUL",
-    "INT",
-    "PDL",
-    "STR",
-    "SUS",
-    "SHFT",
-  ];
-
-  const priorityLevels = ["Low", "Medium", "High", "Critical"];
-  const statusOptions = ["Open", "In Progress", "Closed"];
+  }, [isOpen, editMode, editedIssue.id]);
 
   useEffect(() => {
     setEditedIssue(issue);
@@ -136,6 +107,7 @@ export default function IssueModal({
     setError(null);
 
     try {
+      
       const response = await updateIssue(editedIssue.id, {
         driver: editedIssue.driver,
         date: editedIssue.date,
@@ -145,6 +117,7 @@ export default function IssueModal({
         priority: editedIssue.priority,
         status: editedIssue.status,
       });
+
       if (response.status !== 200) {
         throw new Error("Failed to update issue");
       }
@@ -434,13 +407,13 @@ export default function IssueModal({
         ) : (
           <div>
             <div className="flex justify-between mb-4">
-              <h2 className="text-xl font-bold">Issue #{issue.id}</h2>
+              <h2 className="text-xl font-bold">Issue #{editedIssue.issue_number}</h2>
             </div>
             {imageUrl ? (
               <div className="mb-4">
                 <img
                   src={imageUrl}
-                  alt={`Issue ${issue.id}`}
+                  alt={`Issue ${editedIssue.id}`}
                   className="max-h-60 w-auto mx-auto rounded shadow"
                 />
               </div>
@@ -452,39 +425,39 @@ export default function IssueModal({
             )}
             <div className="space-y-4">
               <p className="break-words">
-                <strong>Driver:</strong> {issue.driver}
+                <strong>Driver:</strong> {editedIssue.driver}
               </p>
               <p>
-                <strong>Date:</strong> {issue.date}
+                <strong>Date:</strong> {editedIssue.date}
               </p>
               <p className="break-words">
-                <strong>Synopsis:</strong> {issue.synopsis}
+                <strong>Synopsis:</strong> {editedIssue.synopsis}
               </p>
               <p>
                 <strong>Priority:</strong>{" "}
                 <span
                   className={`text-xs font-medium px-2.5 py-0.5 rounded ml-2 ${getPriorityColor(
-                    issue.priority
+                    editedIssue.priority
                   )}`}
                 >
-                  {issue.priority || "Unknown"}
+                  {editedIssue.priority || "Unknown"}
                 </span>
               </p>
               <p>
                 <strong>Status:</strong>{" "}
                 <span
                   className={`text-xs font-medium px-2.5 py-0.5 rounded ml-2 ${getStatusColor(
-                    issue.status
+                    editedIssue.status
                   )}`}
                 >
-                  {issue.status || "Unknown"}
+                  {editedIssue.status || "Unknown"}
                 </span>
               </p>
               <div>
                 <strong>Subsystems:</strong>
                 <div className="flex gap-2 mt-2 flex-wrap">
-                  {issue.subsystems.length > 0 ? (
-                    issue.subsystems.map((subsystem) => (
+                  {editedIssue.subsystems.length > 0 ? (
+                    editedIssue.subsystems.map((subsystem) => (
                       <span
                         key={subsystem}
                         className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded"
@@ -502,7 +475,7 @@ export default function IssueModal({
               <div>
                 <strong>Description:</strong>
                 <p className="mt-2 whitespace-pre-wrap break-words overflow-hidden">
-                  {issue.description}
+                  {editedIssue.description}
                 </p>
               </div>
               <div className="flex justify-end mb-4">
