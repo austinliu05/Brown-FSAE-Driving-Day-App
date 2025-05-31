@@ -4,7 +4,9 @@ import { invoke } from '@tauri-apps/api/core';
 
 const HomePage: React.FC = () => {
 
-    invoke('greet', {name: 'World'}).then(console.log);
+    invoke('greet', {name: 'World'})
+        .then(console.log)
+        .catch(console.log)
 
     return (
         <PageBase>
