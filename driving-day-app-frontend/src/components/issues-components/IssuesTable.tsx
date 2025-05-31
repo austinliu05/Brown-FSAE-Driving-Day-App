@@ -94,8 +94,6 @@ export default function IssueTable() {
   }
 
   const handleSave = (newIssue?: Issue) => {
-    console.log(newIssue)
-
     // Need to re-clear the Stack:
     pageStartStack.clear()
     setPageNumber(1)
@@ -133,7 +131,8 @@ export default function IssueTable() {
   };
 
   useEffect(() => {
-    fetchIssuesPaginated("", "")
+    // fetchIssuesPaginated("", "")
+    handleSave()
   }, [subsystemFilt, priorityFilt, statusFilt]);
 
   return (
