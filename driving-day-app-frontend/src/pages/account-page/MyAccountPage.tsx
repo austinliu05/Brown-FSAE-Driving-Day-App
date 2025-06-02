@@ -1,23 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 import PageBase from '../../components/base-components/PageBase';
 import { SpecificDriverProfile } from '../../components/driver-components/SpecificDriverProfile';
-import { Driver } from '../../utils/DriverType';
 import './MyAccountPage.css';
+import { getSpecificDriver } from '../../api/api';
 import AppDataContext from "../../components/contexts/AppDataContext";
 import { handleGoogleLogin } from '../../controllers/AuthController';
 
 const MyAccountPage : React.FC = () => {
 
-  const {currUserId, setCurrUserId} = useContext(AppDataContext)
-
-  const tempDriver : Driver = {
-    driverId:"undefined",
-    firstName:"undefined",
-    lastName: 'undefined',
-    height: 5,
-    weight: 10,
-    pedalBoxPos: 3
-  }
+  const {currUserId, setCurrUserId, currUser, setCurrUser} = useContext(AppDataContext)
 
   const performLogin = async () => {
     try{
@@ -29,6 +20,21 @@ const MyAccountPage : React.FC = () => {
     }
   }
 
+  const fetchSpecificDriver = async () => {
+    if(currUserId){
+      const response = await getSpecificDriver({
+        driverId: currUserId
+      })
+      if (response.status === 200 && response.data.driver) {
+        setCurrUser(response.data.driver)
+      }
+    }
+  }
+
+  useEffect(() => {
+    fetchSpecificDriver()
+  }, [currUserId])
+
   return (
     <PageBase style={{
       height: '100vh',
@@ -36,18 +42,7 @@ const MyAccountPage : React.FC = () => {
     }}>
       <h1>My Account</h1>
       {currUserId 
-        ? (
-          <>     
-            {/** If signed in, should be able to edit profile data */}     
-            <SpecificDriverProfile driver={tempDriver}/>
-            {/* <button
-              onClick={handleLogout}
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              Logout
-            </button> */}
-          </>
-        )
+        ? <SpecificDriverProfile driver={currUser}/>
         : (
             <div className="flex flex-col items-center justify-center h-full">
               <button
@@ -75,18 +70,12 @@ const MyAccountPage : React.FC = () => {
                 <colgroup>
                   {/** Issue # */}
                   <col style={{ width: "10%" }} />
-                  {/** Driver */}
-                  {/* <col style={{ width: "10%" }} />  */}
                   {/** Date */}
                   <col style={{ width: "10%" }} /> 
                   {/** Synopsis */}
                   <col style={{ width: "15%" }} /> 
                   {/** Subsystem */}
                   <col style={{ width: "10%" }} /> 
-                  {/** Priority */}
-                  {/* <col style={{ width: "8%" }} />  */}
-                  {/** Status */}
-                  {/* <col style={{ width: "15%" }} />  */}
                 </colgroup>
               </table>
               <thead>
