@@ -5,6 +5,7 @@
   "dependencies": {
     "@craco/craco": "^7.1.0",
     "@react-oauth/google": "^0.12.1",
+    "@tauri-apps/api": "^2",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -37,7 +38,11 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "dev": "react-scripts start",                
+    "tauri": "tauri",                             
+    "tauri:dev": "npm run tauri dev",             
+    "build": "react-scripts build",                
+    "tauri:build": "npm run build && tauri build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -60,6 +65,7 @@
     ]
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.5.0",
     "autoprefixer": "^10.4.20",
     "copy-webpack-plugin": "^12.0.2",
     "postcss": "^8.4.47",

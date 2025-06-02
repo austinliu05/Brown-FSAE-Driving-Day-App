@@ -88,6 +88,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://brown-fsae-austinliu05-austinliu05s-projects.vercel.app",
 ]
 
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://brown-fsae.*\.vercel\.app$",
+]
+
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "X-CSRFToken",
 ]

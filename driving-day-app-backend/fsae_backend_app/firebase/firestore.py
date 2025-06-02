@@ -58,6 +58,7 @@ def add_driver(data):
         print(f"An unexpected error occurred: {e}")
         return None
 
+
 def get_all_drivers(filters=None):
     """
     Retrieves all users from the 'driver-profiles' collection with optional filtering.
@@ -90,6 +91,33 @@ def get_all_drivers(filters=None):
     except Exception as e:
         print(f"An error occurred while retrieving users: {e}")
         return []
+
+
+def get_specific_driver(driverId):
+    """
+    Retrieves a specific driver from the 'driver-profiles' collection, based on the inputted driver ID.
+    
+    Args:
+        driverId (string): String of driver ID.
+    
+    Returns:
+        dict: JSON of the driver data (as a dictionary)
+    """
+    try:
+        doc_ref = db.collection('driver-profiles').document(driverId)
+        doc = doc_ref.get()    
+                
+        if doc.exists:
+            updated_dict = doc.to_dict()
+            updated_dict["driverId"] = doc.id
+            return updated_dict
+        else:
+            return dict()
+    
+    except Exception as e:
+        print(f"An error occurred while retrieving users: {e}")
+        return dict()
+
 
 def upload_csv_to_firestore(csv_file_path, driver_id):
     """
@@ -155,51 +183,7 @@ def upload_csv_to_firestore(csv_file_path, driver_id):
     
     except Exception as e:
         print(f"An error occurred while uploading CSV to Firestore: {e}")
-        
-def upload_csv_columns_as_documents(csv_file_path):
-    """
-    Uploads data from a CSV file to Firestore where each column in the CSV is a document, and each
-    row is stored as a field within that document.
-
-    Args:
-        csv_file_path (str): The path to the CSV file to be uploaded.
-
-    Returns:
-        None
-
-    Example:
-        upload_csv_columns_as_documents('/path/to/data.csv')
-    """
-    # Define the main collection and subcollection structure
-    main_collection = 'ecu-data'
-    subcollection = 'columns'
-
-    file_name = os.path.splitext(os.path.basename(csv_file_path))[0]
-    main_document = file_name
-    
-    main_doc_ref = db.collection(main_collection).document(main_document)
-    subcollection_ref = main_doc_ref.collection(subcollection)
-    
-    try:
-        with open(csv_file_path, mode='r', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
-            headers = reader.fieldnames
-                        
-            for row_number, row in enumerate(reader):
-                for header in headers:
-                    field_name = f'second_{row_number:04}'
-                    subcollection_ref.document(header).set({field_name: row[header]}, merge=True)
-                if row_number % 100 == 0:
-                    print(f"Processed row {row_number}")
-
-        print(f"All data from {csv_file_path} has been successfully uploaded to Firestore under document '{main_document}' with each column as a document.")
-    
-    except FileNotFoundError:
-        print(f"Error: The file {csv_file_path} does not exist.")
-    
-    except Exception as e:
-        print(f"An error occurred while uploading CSV to Firestore: {e}")
-
+      
 
 def get_specific_run_data(run_title, categories_list=[]):
     try:
@@ -240,23 +224,14 @@ def get_specific_run_data_paginated(run_title, page_size, start_after_doc="", en
             document_query = document_query.select(categories_formatted)
 
         if len(start_after_doc) > 0:
-            previous_doc_snapshot = db.collection('ecu-data')\
-                .document(run_title)\
-                .collection('data')\
-                .document(start_after_doc)\
+            previous_doc_snapshot = document_query.document(start_after_doc)\
                 .get()
-
             document_query = document_query.start_after(previous_doc_snapshot)
 
         elif len(end_before_doc) > 0:
-            last_doc_snapshot = db.collection('ecu-data')\
-                .document(run_title)\
-                .collection('data')\
-                .document(end_before_doc)\
+            last_doc_snapshot = document_query.document(end_before_doc)\
                 .get()
-
             document_query = document_query.end_before(last_doc_snapshot)
-
 
         document_data = document_query\
             .order_by('__name__')\
@@ -308,6 +283,24 @@ def get_general_run_data(filter_limit=10, filtered_date=None, filtered_driver=No
         print(f"An unexpected error occurred: {e}")
         return None
 
+
+def get_latest_issue_number():
+    try:
+        main_db = db.collection('issues')
+        query = main_db.order_by('issue_number', direction=firestore.Query.DESCENDING)
+
+        # Pulls the first entry
+        docs = query.limit(1).stream()
+        
+        for doc in docs:
+            doc_data = doc.to_dict()
+            return doc_data['issue_number']
+    except Exception as e:
+        print(f"An unexpected error occurred when pulling specific document data (latest issue number): {e}")
+        return None
+
+
+
 def add_issue(data):
     try:
         if not isinstance(data, dict):
@@ -318,8 +311,13 @@ def add_issue(data):
             if field not in data or not data[field]:
                 raise ValueError(f"Missing or empty required field: {field}")
 
+        # Pull latest issue number:
+        new_issue_num = int(get_latest_issue_number()) + 1
+        data['issue_number'] = new_issue_num
+
         issue_data = {
             'driver': data['driver'],
+            'issue_number': data['issue_number'],
             'date': data['date'],
             'synopsis': data['synopsis'],
             'subsystems': data['subsystems'],
@@ -387,6 +385,45 @@ def get_all_issues(filters=None):
         print(f"An error occurred while retrieving issues: {e}")
         return None
     
+
+def get_issues_paginated(page_size, start_at_doc="", start_after_doc="", filters=None):
+    try:
+        main_db = db.collection('issues')
+        query = main_db.order_by('issue_number', direction=firestore.Query.DESCENDING)
+
+        if len(start_at_doc) > 0:
+            previous_doc_snapshot = main_db.document(start_at_doc)\
+                .get()
+            query = query.start_at(previous_doc_snapshot)
+        elif len(start_after_doc) > 0:
+            last_doc_snapshot = main_db.document(start_after_doc)\
+                .get()
+            query = query.start_after(last_doc_snapshot)
+        
+        if filters:
+            # TODO: Add subsystem filter
+            if 'subsystem' in filters:
+                query = query.where('subsystems', 'array_contains_any', [filters['subsystem']])
+            if 'priority' in filters:
+                query = query.where('priority', '==', filters['priority'])
+            if 'status' in filters:
+                query = query.where('status', '==', filters['status'])      
+
+        docs = query\
+            .limit(int(page_size)).stream()
+
+        issues = []
+        for doc in docs:
+            doc_data = doc.to_dict()
+            doc_data['id'] = doc.id  # Include the document ID if needed
+            issues.append(doc_data)
+                
+        return issues
+    except Exception as e:
+        print(f"An unexpected error occurred when pulling issues (paginated): {e}")
+        return None
+
+
 def update_issue(issue_id: str, data: dict):
     try:
         if not isinstance(data, dict):
@@ -424,6 +461,7 @@ def update_issue(issue_id: str, data: dict):
         print(f"An unexpected error occurred while updating issue: {e}")
         return None
 
+
 def delete_issue(issue_id: str):
     try:
         if not issue_id:
@@ -446,40 +484,3 @@ def delete_issue(issue_id: str):
     except Exception as e:
         print(f"An unexpected error occurred while deleting issue: {e}")
         return None
-    
-
-def get_user_by_email(email):
-    """
-    Retrieves a user document from Firestore by email.
-
-    Args:
-        email (str): The user's email address
-
-    Returns:
-        dict: User data if found
-        None: If user not found or error occurs
-    """
-    try:
-        user_doc = db.collection('users').document(email).get()
-        if user_doc.exists:
-            return user_doc.to_dict()
-        return None
-    except Exception as e:
-        print(f"Error retrieving user: {e}")
-        return None
-
-
-def update_user_last_login(email):
-    """
-    Updates the user's last login timestamp.
-
-    Args:
-        email (str): The user's email address
-    """
-    try:
-        db.collection('users').document(email).update({
-            'lastLogin': firestore.SERVER_TIMESTAMP
-        })
-    except Exception as e:
-        print(f"Error updating last login: {e}")
-

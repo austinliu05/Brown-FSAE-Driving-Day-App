@@ -29,6 +29,7 @@ const globalPageSize: number = 20
 export default function Layout() {
 
     const [currUserId, setCurrUserId] = useState<string | null>(null)
+    const [currUser, setCurrUser] = useState<Driver | null>(null)
     const [drivers, setDrivers] = useState<Driver[]>([])
     const [isLoading, setLoading] = useState<boolean>(true)
 
@@ -90,6 +91,8 @@ export default function Layout() {
                 <AppDataContext.Provider value={{
                     currUserId: currUserId,
                     setCurrUserId: setCurrUserId,
+                    currUser: currUser,
+                    setCurrUser: setCurrUser,
                     drivers: drivers,
                     isLoading: isLoading
                 }}>
