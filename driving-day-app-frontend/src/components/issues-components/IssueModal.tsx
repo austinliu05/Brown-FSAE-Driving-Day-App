@@ -29,12 +29,13 @@ export default function IssueModal({
   const [imgError, setImgError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isOpen && !editMode) {
-      setImageUrl(null);
-      setImgError(null);
+    // Clear the current Image URL because no issue is selected
+    setImageUrl(null);
+    setImgError(null);
 
+    if (isOpen && !editMode) {
       fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/fetch-s3-image/?issue_id=${editedIssue.id}`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/fetch-s3-image/?issue_id=${issue.id}`,
         { credentials: "include" }
       )
         .then((res) => {
@@ -42,14 +43,17 @@ export default function IssueModal({
           return res.json();
         })
         .then((data) => {
+          // Pulls the result from fetching via the current edited Issue
+          console.log("Current Image URL for the given id: ", issue.id, data)
           setImageUrl(data.url);
         })
         .catch((err) => {
           console.warn("No image or fetch failed:", err);
+          setImageUrl(null)
           setImgError("No image available");
         });
     }
-  }, [isOpen, editMode, editedIssue.id]);
+  }, [isOpen, editMode]);
 
   useEffect(() => {
     setEditedIssue(issue);
