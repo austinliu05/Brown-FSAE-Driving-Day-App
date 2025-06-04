@@ -10,6 +10,7 @@ import LineChartTemplate from '../../components/graph-components/LineChartTempla
 import ScatterChartTemplate from '../../components/graph-components/ScatterChartTemplate';
 import { CATEGORIES, StandardChartProps } from "../../utils/DataTypes";
 import { auth } from '../../api/firebaseConfig'; 
+import { invoke } from '@tauri-apps/api/core';
 
 const chartMapping: { [key: number]: React.FC<StandardChartProps> } = {
     0: LineChartTemplate,
@@ -27,6 +28,10 @@ const globalPageSize: number = 20
 
 
 export default function Layout() {
+
+    invoke('maximize_window')
+        .then(console.log)
+        .catch(console.log)
 
     const [currUserId, setCurrUserId] = useState<string | null>(null)
     const [currUser, setCurrUser] = useState<Driver | null>(null)
